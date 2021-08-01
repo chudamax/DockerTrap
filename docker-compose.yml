@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  dockertrap:
+    build: .
+    ports:
+      - 0.0.0.0:2375:2375
