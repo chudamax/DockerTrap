@@ -1,0 +1,11 @@
+default:
+  Containers: -1
+  Created: 1623795577
+  Id : "sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83"
+  Labels: null
+  ParentId: null
+  RepoDigests: ["alpine@sha256:234cb88d3020898631af0ccbbcca9a66ae7306ecd30c9720690858c1b007d2a0"]
+  RepoTags: ["alpine:latest"]
+  SharedSize: -1
+  Size: 5595013
+  VirtualSize: 5595013

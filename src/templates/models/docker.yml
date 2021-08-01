@@ -1,0 +1,150 @@
+default:
+  Platform:
+    Name: ''
+  Version: 18.05.0-ce
+  ApiVersion: "1.37"
+  MinAPIVersion: "1.12"
+  GitCommit: 'f150324'
+  GoVersion: go1.9.5
+  Os: linux
+  Arch: amd64
+  KernelVersion: 3.10.0-514.26.2.el7.x86_64
+  BuildTime: !!str "2018-05-09T22:18:36.000000000+00:00"
+  Components: 
+    - Name: Engine
+      Version: 18.05.0-ce
+      Details:
+        ApiVersion: "1.37"
+        Arch: amd64
+        BuildTime: !!str "2018-05-09T22:18:36.000000000+00:00"
+        Experimental: "false"
+        GitCommit: f150324
+        GoVersion: go1.9.5
+        KernelVersion: 3.10.0-514.26.2.el7.x86_64
+        MinAPIVersion: "1.12"
+        Os: linux
+  ID: 4G4J:E66X:Q2XU:P5MD:FMAE:7BRU:WDFG:2LFG:ZGJ3:Q4WC:Z6R6:63P5
+  Containers: 8
+  ContainersRunning: 2
+  ContainersPaused: 0
+  ContainersStopped: 6
+  Images: 2
+  Driver: overlay2d
+  DriverStatus:
+    - - Backing Filesystem
+      - extfs
+    - - Supports d_type
+      - 'true'
+    - - Native Overlay Diff
+      - 'true'
+  Plugins:
+    Volume:
+      - local
+    Network:
+      - bridge
+      - host
+      - ipvlan
+      - macvlan
+      - 'null'
+      - overlay
+    Authorization: null
+    Log:
+      - awslogs
+      - fluentd
+      - gcplogs
+      - gelf
+      - journald
+      - json-file
+      - local
+      - logentries
+      - splunk
+      - syslog
+  MemoryLimit: true
+  SwapLimit: true
+  KernelMemory: false
+  KernelMemoryTCP: false
+  CpuCfsPeriod: true
+  CpuCfsQuota: true
+  CPUShares: true
+  CPUSet: true
+  PidsLimit: true
+  IPv4Forwarding: true
+  BridgeNfIptables: true
+  BridgeNfIp6tables: true
+  Debug: false
+  NFd: 26
+  OomKillDisable: false
+  NGoroutines: 42
+  SystemTime: '2021-07-18T02:20:13.014193422-04:00'
+  LoggingDriver: json-file
+  CgroupDriver: systemd
+  CgroupVersion: '2'
+  NEventsListener: 0
+  KernelVersion: 5.4.0-65-generic
+  OperatingSystem: Ubuntu 20.04.2 LTS
+  OSVersion: '20.10.7'
+  OSType: linux
+  Architecture: x86_64
+  IndexServerAddress: https://index.docker.io/v1/
+  RegistryConfig:
+    AllowNondistributableArtifactsCIDRs: []
+    AllowNondistributableArtifactsHostnames: []
+    InsecureRegistryCIDRs:
+      - 127.0.0.0/8
+    # IndexConfigs:
+    #   docker.io:
+    #     Name: docker.io
+    #     Mirrors: []
+    #     Secure: true
+    #     Official: true
+    Mirrors: []
+  NCPU: 2
+  MemTotal: 2079064064
+  GenericResources: null
+  DockerRootDir: /var/lib/docker
+  HttpProxy: ''
+  HttpsProxy: ''
+  NoProxy: ''
+  Name: ubuntu
+  Labels: []
+  ExperimentalBuild: false
+  ServerVersion: 20.10.5+dfsg1
+  # Runtimes:
+  #   io.containerd.runc.v2:
+  #     path: runc
+  #   io.containerd.runtime.v1.linux:
+  #     path: runc
+  #   runc:
+  #     path: runc
+  DefaultRuntime: runc
+  Swarm:
+    NodeID: ''
+    NodeAddr: ''
+    LocalNodeState: inactive
+    ControlAvailable: false
+    Error: ''
+    RemoteManagers: null
+  LiveRestoreEnabled: false
+  Isolation: ''
+  InitBinary: docker-init
+  ContainerdCommit:
+    ID: 1.4.4~ds1-2
+    Expected: 1.4.4~ds1-2
+  RuncCommit:
+    ID: 1.0.0~rc93+ds1-5
+    Expected: 1.0.0~rc93+ds1-5
+  InitCommit:
+    ID: ''
+    Expected: ''
+  SecurityOptions:
+    - name=apparmor
+    - name=seccomp,profile=default
+    - name=cgroupns
+  Warnings:
+    - |-
+      WARNING: API is accessible on http://0.0.0.0:2375 without encryption.
+              Access to the remote API is equivalent to root access on the host. Refer
+              to the 'Docker daemon attack surface' section in the documentation for
+              more information: https://docs.docker.com/engine/security/security/#docker-daemon-attack-surface
+    - 'WARNING: Support for cgroup v2 is experimental'
+  

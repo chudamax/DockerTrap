@@ -1,0 +1,12 @@
+sensor:
+  id: 'default'
+  type: 'docker'
+  log_file: true
+
+mongodb:
+  uri: ""
+ 
+headers:
+  Server: "Docker/18.05.0-ce (linux)"
+  Docker-Experimental: false
+  Ostype: linux
