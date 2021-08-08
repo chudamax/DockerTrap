@@ -1,6 +1,12 @@
 import random
 import os
 import yaml
+import re
+
+def extract_urls(cmd):
+    regex=r"""\b((?:https?://)?(?:(?:www\.)?(?:[\da-z\.-]+)\.(?:[a-z]{2,6})|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|(?:(?:[0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?:(?::[0-9a-fA-F]{1,4}){1,6})|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(?::[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(?:ffff(?::0{1,4}){0,1}:){0,1}(?:(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])|(?:[0-9a-fA-F]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])))(?::[0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])?(?:/[\w\.-]*)*/?)\b"""
+    matches = re.findall(regex, cmd)
+    return matches
 
 def get_random_name():
     # Open the file in read mode
@@ -15,21 +21,19 @@ def get_settings():
 
     settings = {
         'sensor':{},
-        'mongodb':{}
+        'mongodb':{},
+        'misp':{}
     }
 
     with open(SETTINGS_PATH, 'r') as stream:
         file_settings = yaml.safe_load(stream)
 
-    if 'sensor_id' in os.environ:
+    if os.environ.get('sensor_id'):
         settings['sensor']['id'] = os.environ['sensor_id']
-    else:
+    elif file_settings['sensor']['id']:
         settings['sensor']['id'] = file_settings['sensor']['id']
-
-    if 'sensor_type' in os.environ:
-        settings['sensor']['type'] = os.environ['type']
     else:
-        settings['sensor']['type'] = file_settings['sensor']['type']
+        settings['sensor']['id'] = 'sensor_' + get_random_name()[1:]
 
     if 'log_file' in os.environ:
         settings['sensor']['log_file'] = os.environ['log_file']
@@ -42,5 +46,25 @@ def get_settings():
         settings['mongodb']['uri'] = file_settings['mongodb']['uri']
 
     settings['headers'] = file_settings['headers']
+
+    if 'misp_url' in os.environ:
+        settings['misp']['url'] = os.environ['misp_url']
+    else:
+        settings['mongodb']['uri'] = file_settings['mongodb']['uri']
+
+    if 'misp_key' in os.environ:
+        settings['misp']['key'] = os.environ['misp_key']
+    else:
+        settings['misp']['key'] = file_settings['misp']['key']
+
+    if 'misp_verify' in os.environ:
+        settings['misp']['verify'] = os.environ['misp_verify']
+    else:
+        settings['misp']['verify'] = file_settings['misp']['verify']
+
+    if 'misp_cert' in os.environ:
+        settings['misp']['cert'] = os.environ['misp_cert']
+    else:
+        settings['misp']['cert'] = file_settings['misp']['cert']
 
     return settings

@@ -7,9 +7,5 @@ services:
       dockerfile: dockerfiles/docker
     ports:
       - 0.0.0.0:2375:2375
-  registry:
-    build: 
-      context: .
-      dockerfile: dockerfiles/registry
-    ports:
-      - 0.0.0.0:5000:5000
+    environment:
+      - sensor_id=sensor_1

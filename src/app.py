@@ -27,27 +27,6 @@ app.config['MONGODB_SETTINGS'] = {
 
 db.init_app(app)
 
-def init_db():
-
-    Docker.objects.delete()
-    with open(MODELS_TEMPLATES_DIR + '/docker.yml') as file:
-        docker = yaml.load(file, Loader=yaml.FullLoader)['default']
-    o = Docker(**docker).save()
-
-    DockerImage.objects.delete()
-    with open(MODELS_TEMPLATES_DIR + '/images.yml') as file:
-        images = yaml.load(file, Loader=yaml.FullLoader)
-        
-        for image in images.values():
-            o = DockerImage(**image).save()
-
-    DockerContainer.objects.delete()
-    with open(MODELS_TEMPLATES_DIR + '/containers.yml') as file:
-        containers = yaml.load(file, Loader=yaml.FullLoader)
-        
-        for container in containers.values():
-            o = DockerContainer(**container).save()
-
 @app.after_request
 def docker_headers_mimicking(response):
     for key, value in settings['headers'].items():
@@ -62,25 +41,25 @@ def before_request_callback():
     date_now_utc = datetime.datetime.utcnow()
 
     log_params = {
-        'date': date_now_utc,
-        'sensor_id': settings['sensor']['id'],
-        'sensor_type': settings['sensor']['type'],
-        'method': request.method,
-        'path': request.path,
-        'host': request.host.split(':', 1)[0],
-        'args': dict(request.args),
-        'url': request.url,
-        'headers': dict(request.headers),
-        'data_json': request.get_json(),
-        'data': str(request.get_data()),
-        'source_ip': request.remote_addr
+        'Date': date_now_utc,
+        'SensorId': settings['sensor']['id'],
+        'SensorType': 'Docker',
+        'Method': request.method,
+        'Path': request.path,
+        'Host': request.host.split(':', 1)[0],
+        'Args': dict(request.args),
+        'Url': request.url,
+        'Headers': dict(request.headers),
+        'DataJson': request.get_json(),
+        'Data': str(request.get_data()),
+        'SourceIP': request.remote_addr
     }
 
     o = HttpRequestLog(**log_params).save()
 
     if settings['sensor']['log_file']:
         #dirty, but works
-        log_params['date'] = str(date_now_utc)
+        log_params['Date'] = str(date_now_utc)
 
         date_str = date_now_utc.strftime('%d_%m_%Y')
         log_path = os.path.join(CURRENT_DIR,'logs', date_str + '_log.json')
@@ -109,7 +88,7 @@ def version(api_version=None):
             return response
 
 
-    docker = Docker.objects().first()
+    docker = Docker.objects(SensorId=settings['sensor']['id']).first()
     keys = ['Platform', 'Version', 'ApiVersion', 'MinAPIVersion', 'GitCommit', 'GoVersion', 'Os', 'Arch', 'KernelVersion','BuildTime', 'Components']
     response = {x:docker[x] for x in keys}
 
@@ -119,7 +98,7 @@ def version(api_version=None):
 @app.route('/info', methods = ['HEAD', 'GET'], endpoint='info')
 @app.route('/v<api_version>/info', methods = ['HEAD', 'GET'], endpoint='info')
 def info(api_version=None):
-    docker = Docker.objects().first()
+    docker = Docker.objects(SensorId=settings['sensor']['id']).first()
     keys = [
         'ID', 'Containers', 'ContainersRunning', 'ContainersPaused', 'ContainersStopped', 'Images', 'Driver', 'DriverStatus', 'Plugins',
         'MemoryLimit', 'SwapLimit', 'KernelMemory', 'KernelMemoryTCP', 'CpuCfsPeriod', 'CpuCfsQuota', 'CPUShares', 'CPUSet', 'PidsLimit',
@@ -163,7 +142,7 @@ def create_container(id):
 
         #do we have such image?
         RepoTags = ['{}:latest'.format(image)]
-        docker_images = DockerImage.objects(RepoTags=RepoTags)
+        docker_images = DockerImage.objects(RepoTags=RepoTags, SensorId=settings['sensor']['id'])
         if len(docker_images) == 0:
             answer = {"message":"No such image: {}".format(RepoTags)}
             return jsonify(answer),404
@@ -185,6 +164,8 @@ def create_container(id):
         new_container['NetworkSettings']['Networks']['bridge']['NetworkID'] = secrets.token_hex(32)
         new_container['NetworkSettings']['Networks']['bridge']['EndpointID'] = secrets.token_hex(32)
         new_container['Command'] = cmd
+
+        new_container['SensorId'] = settings['sensor']['id']
 
         o = DockerContainer(**new_container).save()
 
@@ -211,6 +192,7 @@ def image_create(id):
         new_image['Id'] = secrets.token_hex(32)
         new_image['RepoDigests'] = ["{0}@sha256:{1}".format(image,secrets.token_hex(32))]
         new_image['RepoTags'] = ["{}:{}".format(image,tag)]
+        new_image['SensorId'] = settings['sensor']['id']
 
         o = DockerImage(**new_image).save()
 
@@ -258,7 +240,7 @@ def events(api_version):
     filters = json.loads(request.args.get("filters"))
     id = list(filters['container'].keys())[0]
 
-    containers = DockerContainer.objects(Id=id)
+    containers = DockerContainer.objects(Id=id, SensorId=settings['sensor']['id'])
     if len(containers) > 0:
         container = containers[0]
         image_name = container.Image
@@ -372,11 +354,11 @@ def container_start(api_version, container_id):
 
 @app.route('/v<id>/containers/json', endpoint='view_containers')
 def view_containers(id):
-    return jsonify(DockerContainer.objects())
+    return jsonify(DockerContainer.objects(SensorId=settings['sensor']['id']))
     
 @app.route('/v<id>/images/json', endpoint='images_info')
 def images_info(id):
-    return jsonify(DockerImage.objects())
+    return jsonify(DockerImage.objects(SensorId=settings['sensor']['id']))
 
 if __name__ == "__main__":
     init_db()

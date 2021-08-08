@@ -5,6 +5,7 @@ from flask_mongoengine import MongoEngine
 db = MongoEngine()
 
 class Docker(db.Document):
+    SensorId = db.StringField(required=True)
     Platform = db.DictField(required=True)
     Version = db.StringField(required=True)
     ApiVersion = db.StringField(required=True)
@@ -76,6 +77,7 @@ class Docker(db.Document):
     Warnings= db.ListField()
 
 class DockerImage(db.Document):
+    SensorId = db.StringField(required=True)
     Containers = db.IntField(required=True)
     Created = db.IntField(required=True)
     Id = db.StringField(required=True)
@@ -88,6 +90,7 @@ class DockerImage(db.Document):
     VirtualSize = db.IntField(required=True)
 
 class DockerContainer(db.Document):
+    SensorId = db.StringField(required=True)
     Id = db.StringField(required=True)
     Names = db.ListField(required=True)
     Image = db.StringField(required=True)
@@ -103,16 +106,16 @@ class DockerContainer(db.Document):
     Mounts = db.ListField()
 
 class HttpRequestLog(db.Document):
-    date = db.DateTimeField(default=datetime.datetime.utcnow)
-    sensor_id = db.StringField(required=True)
-    sensor_type = db.StringField(required=True)
-    method = db.StringField(required=True)
-    path = db.StringField(required=True)
-    host = db.StringField(required=True)
-    args = db.DictField()
-    url = db.StringField(required=True)
-    headers = db.DictField(required=True)
-    data_json = db.DictField()
-    data = db.StringField()
-    source_ip = db.StringField(required=True)
+    Date = db.DateTimeField(default=datetime.datetime.utcnow)
+    SensorId = db.StringField(required=True)
+    SensorType = db.StringField(required=True)
+    Method = db.StringField(required=True)
+    Path = db.StringField(required=True)
+    Host = db.StringField(required=True)
+    Args = db.DictField()
+    Url = db.StringField(required=True)
+    Headers = db.DictField(required=True)
+    DataJson = db.DictField()
+    Data = db.StringField()
+    SourceIP = db.StringField(required=True)
 
