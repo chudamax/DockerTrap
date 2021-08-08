@@ -1,7 +1,15 @@
 version: '3'
 
 services:
-  dockertrap:
-    build: .
+  docker:
+    build: 
+      context: .
+      dockerfile: dockerfiles/docker
     ports:
       - 0.0.0.0:2375:2375
+  registry:
+    build: 
+      context: .
+      dockerfile: dockerfiles/registry
+    ports:
+      - 0.0.0.0:5000:5000

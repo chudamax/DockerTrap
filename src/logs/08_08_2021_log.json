@@ -1,0 +1,1 @@
+{"date": "2021-08-08 10:34:00.197749", "sensor_id": "default", "sensor_type": "docker", "method": "GET", "path": "/", "host": "scaner.chudamax.com", "args": {}, "url": "http://scaner.chudamax.com:5000/", "headers": {"Host": "scaner.chudamax.com:5000", "User-Agent": "curl/7.68.0", "Accept": "*/*"}, "data_json": null, "data": "b''", "source_ip": "86.49.227.87"}
