@@ -11,19 +11,19 @@ cli = FlaskGroup(app)
 
 @cli.command("seed_db")
 def seed_db():
-
+    
     try:
-        Docker.objects({'SensorId': settings['sensor']['id']}).delete()
+        Docker.objects(SensorId = settings['sensor']['id']).delete()
     except:
         pass
 
     try:
-        DockerImage.objects({'SensorId': settings['sensor']['id']}).delete()
+        DockerImage.objects(SensorId = settings['sensor']['id']).delete()
     except:
         pass
 
     try:
-        DockerContainer.objects({'SensorId': settings['sensor']['id']}).delete()
+        DockerContainer.objects(SensorId = settings['sensor']['id']).delete()
     except:
         pass
 

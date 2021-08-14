@@ -163,7 +163,8 @@ def main():
                     'type':'url',
                     'to_ids':to_ids,
                     'value':url,
-                    'comment': '{} requested execution for a new docker container using "Cmd" entry: {}'.format(request['SourceIP'], cmd_str)
+                    #'comment': '{} requested execution for a new docker container using "Cmd" entry: {}'.format(request['SourceIP'], cmd_str)
+                    'comment': str(data_json)
                 }
                 if not attribute in attributes:
                     attributes.append(attribute)
@@ -180,7 +181,8 @@ def main():
                     'type':'url',
                     'to_ids':to_ids,
                     'value':url,
-                    'comment': '{} requested execution for a new docker container using "Entrypoint" entry: {}'.format(request['SourceIP'], entrypoint_str)
+                    #'comment': '{} requested execution for a new docker container using "Entrypoint" entry: {}'.format(request['SourceIP'], entrypoint_str)
+                    'comment': str(data_json)
                 }
                 if not attribute in attributes:
                     attributes.append(attribute)
@@ -192,7 +194,8 @@ def main():
                     'type':'ip-src',
                     'to_ids':to_ids,
                     'value':request['SourceIP'],
-                    'comment': 'Docker command: Cmd:{} Entrypoint:{}'.format(cmd_str, entrypoint_str)
+                   # 'comment': 'Docker command: Cmd:{} Entrypoint:{}'.format(cmd_str, entrypoint_str)
+                   'comment': str(data_json)
                 }
 
             if not attribute in attributes:

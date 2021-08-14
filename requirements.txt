@@ -5,3 +5,4 @@ uwsgidecorators
 gunicorn
 pymisp
 pytz
+python-dateutil

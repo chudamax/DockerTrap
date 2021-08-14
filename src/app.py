@@ -2,7 +2,7 @@ import json, yaml
 import datetime, time
 import secrets
 import os
-
+import dateutil.parser
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -155,22 +155,28 @@ def create_container(id):
         with open(MODELS_TEMPLATES_DIR + '/containers.yml') as file:
             new_container = yaml.load(file, Loader=yaml.FullLoader)['default']
 
-        image_id = secrets.token_hex(32)
-
-        new_container['Id'] = image_id
-        new_container['Names'] = [get_random_name()]
-        new_container['Image'] = image
-        new_container['ImageID'] = "sha256:{}".format(image_id)
-        new_container['NetworkSettings']['Networks']['bridge']['NetworkID'] = secrets.token_hex(32)
-        new_container['NetworkSettings']['Networks']['bridge']['EndpointID'] = secrets.token_hex(32)
-        new_container['Command'] = cmd
+        container_id = secrets.token_hex(32)
 
         new_container['SensorId'] = settings['sensor']['id']
+        new_container['Id'] = container_id
+        new_container['Created'] = datetime.datetime.utcnow().isoformat()
+        new_container['Path'] = cmd
+        new_container['State']['StartedAt'] = datetime.datetime.utcnow().isoformat()
+        new_container['Image'] = "sha256:{}".format(container_id)
+        new_container['ResolvConfPath'] = "/var/lib/docker/containers/{}/resolv.conf".format(container_id)
+        new_container['HostnamePath'] =  "/var/lib/docker/containers/{}/hostname".format(container_id)
+        new_container['HostsPath'] =  "/var/lib/docker/containers/{}/hosts".format(container_id)
+        new_container['LogPath'] =  "/var/lib/docker/containers/{0}/{0}-json.log".format(container_id)
+        new_container['Name'] = get_random_name()
+        new_container['Config']['Hostname'] = secrets.token_hex(6)
+        new_container['Config']['Cmd'] = cmd
+        new_container['NetworkSettings']['Networks']['bridge']['NetworkID'] = secrets.token_hex(32)
+        new_container['NetworkSettings']['Networks']['bridge']['EndpointID'] = secrets.token_hex(32)
 
         o = DockerContainer(**new_container).save()
 
         answer = {
-            "Id":image_id,
+            "Id":container_id,
             "Warnings":[]
         }
 
@@ -243,8 +249,8 @@ def events(api_version):
     containers = DockerContainer.objects(Id=id, SensorId=settings['sensor']['id'])
     if len(containers) > 0:
         container = containers[0]
-        image_name = container.Image
-        container_name = container.Names[0]
+        image_name = container.Config['Image']
+        container_name = container.Name
 
     event_create = {
           "status": "create",
@@ -352,14 +358,55 @@ def events(api_version):
 def container_start(api_version, container_id):
     return '', 204
 
-@app.route('/v<id>/containers/json', endpoint='view_containers')
-def view_containers(id):
-    return jsonify(DockerContainer.objects(SensorId=settings['sensor']['id']))
+@app.route('/v<api_version>/containers/json', endpoint='view_containers')
+def view_containers(api_version):
+
+    containers = []
+    for container in DockerContainer.objects(SensorId=settings['sensor']['id']):
+        new_container = {}
+        new_container['Id'] = container['Id']
+        new_container['Names'] = [container['Name']]
+        new_container['Image'] = container['Config']['Image']
+        new_container['ImageID'] = container['Image'].split(":")[1]
+        if container['Config']['Cmd']:
+            new_container['Command'] = ' '.join(container['Config']['Cmd'])
+        else:
+            container['Config']['Cmd'] = ''
+        new_container['Created'] = int(dateutil.parser.isoparse(container['Created']).timestamp())
+        new_container['Ports'] = []
+        new_container['Labels'] = {}
+        new_container['State'] = container['State']['Status']
+        new_container['Status'] = 'Up About a minute'
+        new_container['HostConfig'] = {'NetworkMode':'default'}
+        new_container['NetworkSettings'] = {}
+        new_container['NetworkSettings']['Networks'] = container['NetworkSettings']['Networks']
+        new_container['Mounts'] = container['Mounts']
+
+        containers.append(new_container)
+
+    return jsonify(containers)
     
-@app.route('/v<id>/images/json', endpoint='images_info')
-def images_info(id):
+@app.route('/v<api_version>/images/json', endpoint='images_info')
+def images_info(api_version):
     return jsonify(DockerImage.objects(SensorId=settings['sensor']['id']))
 
+#/v1.41/containers/061ee0bfdb4c/json
+@app.route('/v<api_version>/containers/<container_id>/json', endpoint='container_info')
+def container_info(api_version, container_id):
+    containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
+    return jsonify(containers[0])
+
+#/v1.41/containers/061ee0bfdb4c/exec
+@app.route('/v<api_version>/containers/<container_id>/exec', methods = ['POST'], endpoint='container_exec')
+def container_exec(api_version, container_id):
+    if request.method == 'POST':
+        data = request.get_json()
+        answer = {"Id":container_id}
+        return jsonify(answer),201
+
+@app.route('/v<api_version>/exec/<container_id>/start', methods = ['POST'], endpoint='exec_start')
+def exec_start(api_version, container_id):
+    return '', 200
+
 if __name__ == "__main__":
-    init_db()
     app.run(host='0.0.0.0', port='2375')

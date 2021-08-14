@@ -1,30 +1,209 @@
+# default:
+#   Id: "3698dd1313bc2de8c6192e200a83ac8da9f21dc5d755143c9fe3224217c41cd9"
+#   Names: ["/beautiful_wright"]
+#   Image: "alpine"
+#   ImageID: "sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83"
+#   Command: "/bin/sh"
+#   Created: 1626018363
+#   Ports: []
+#   Labels: {}
+#   State: "running"
+#   Status: "Up About a minute"
+#   HostConfig: 
+#     NetworkMode: default
+#   NetworkSettings:
+#     Networks:
+#       bridge:
+#         IPAMConfig: null
+#         Links: null
+#         Aliases: null
+#         NetworkID: "889ced293875ecf6a1b363fbc4e74e178da0d8790925dd9269ab020706717d2b"
+#         EndpointID: "46f05b9feb1025b67e24e17afb91099beaa911b40c9ae3a287b781e75244e677"
+#         Gateway: "172.17.0.1"
+#         IPAddress: "172.17.0.2"
+#         IPPrefixLen: 16
+#         IPv6Gateway: ''
+#         GlobalIPv6Address: ''
+#         GlobalIPv6PrefixLen: 0
+#         MacAddress: "02:42:ac:11:00:02"
+#         DriverOpts: null
+#   Mounts: []
+
 default:
-  Id: "3698dd1313bc2de8c6192e200a83ac8da9f21dc5d755143c9fe3224217c41cd9"
-  Names: ["/beautiful_wright"]
-  Image: "alpine"
-  ImageID: "sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83"
-  Command: "/bin/sh"
-  Created: 1626018363
-  Ports: []
-  Labels: {}
-  State: "running"
-  Status: "Up About a minute"
-  HostConfig: 
-    NetworkMode: default
+  Id: "061ee0bfdb4c9faa4ee9396896a1b73bffe5df43b39cfda593ce8d66255965fb"
+  Created: !!str "2021-08-13T14:50:34.537549198Z"
+  Path: "/bin/bash"
+  Args: []
+  State: 
+    Status: "running"
+    Running: true
+    Paused: false
+    Restarting: false
+    OOMKilled: false
+    Dead: false
+    Pid: 35623
+    ExitCode: 0
+    Error: ""
+    StartedAt: !!str "2021-08-13T14:50:34.990748046Z"
+    FinishedAt: !!str "0001-01-01T00:00:00Z"
+  Image: "sha256:9873176a8ff5ac192ce4d7df8a403787558b9f3981a4c4d74afb3edceeda451c"
+  ResolvConfPath: "/var/lib/docker/containers/061ee0bfdb4c9faa4ee9396896a1b73bffe5df43b39cfda593ce8d66255965fb/resolv.conf"
+  HostnamePath: "/var/lib/docker/containers/061ee0bfdb4c9faa4ee9396896a1b73bffe5df43b39cfda593ce8d66255965fb/hostname"
+  HostsPath: "/var/lib/docker/containers/061ee0bfdb4c9faa4ee9396896a1b73bffe5df43b39cfda593ce8d66255965fb/hosts"
+  LogPath: "/var/lib/docker/containers/061ee0bfdb4c9faa4ee9396896a1b73bffe5df43b39cfda593ce8d66255965fb/061ee0bfdb4c9faa4ee9396896a1b73bffe5df43b39cfda593ce8d66255965fb-json.log"
+  Name: "/mystifying_allen"
+  RestartCount: 0
+  Driver: "overlay2"
+  Platform: "linux"
+  MountLabel: ""
+  ProcessLabel: ""
+  AppArmorProfile: "docker-default"
+  ExecIDs: null
+  HostConfig:
+    Binds: null
+    ContainerIDFile: ""
+    LogConfig: 
+      Type: "json-file"
+      Config: {}
+    NetworkMode: "default"
+    PortBindings: {}
+    RestartPolicy: 
+      Name: "no"
+      MaximumRetryCount": 0
+    AutoRemove: false
+    VolumeDriver: ""
+    VolumesFrom: null
+    CapAdd: null
+    CapDrop: null
+    CgroupnsMode": "private"
+    Dns: []
+    DnsOptions: []
+    DnsSearch: []
+    ExtraHosts: null
+    GroupAdd: null
+    IpcMode": "private"
+    Cgroup: ""
+    Links: null
+    OomScoreAdj: 0
+    PidMode: ""
+    Privileged: false
+    PublishAllPorts: false
+    ReadonlyRootfs: false
+    SecurityOpt: null
+    UTSMode: ""
+    UsernsMode: ""
+    ShmSize: 67108864
+    Runtime: "runc"
+    ConsoleSize:
+      - 0
+      - 0
+    Isolation: ""
+    CpuShares: 0
+    Memory: 0
+    NanoCpus: 0
+    CgroupParent: ""
+    BlkioWeight: 0
+    BlkioWeightDevice: []
+    BlkioDeviceReadBps: null
+    BlkioDeviceWriteBps: null
+    BlkioDeviceReadIOps: null
+    BlkioDeviceWriteIOps: null
+    CpuPeriod: 0
+    CpuQuota: 0
+    CpuRealtimePeriod: 0
+    CpuRealtimeRuntime: 0
+    CpusetCpus: ""
+    CpusetMems: ""
+    Devices: []
+    DeviceCgroupRules: null
+    DeviceRequests: null
+    KernelMemory: 0
+    KernelMemoryTCP: 0
+    MemoryReservation: 0
+    MemorySwap: 0
+    MemorySwappiness: null
+    OomKillDisable: null
+    PidsLimit: null
+    Ulimits: null
+    CpuCount: 0
+    CpuPercent: 0
+    IOMaximumIOps: 0
+    IOMaximumBandwidth: 0
+    MaskedPaths: 
+      - "/proc/asound"
+      - "/proc/acpi"
+      - "/proc/kcore"
+      - "/proc/keys"
+      - "/proc/latency_stats"
+      - "/proc/timer_list"
+      - "/proc/timer_stats"
+      - "/proc/sched_debug"
+      - "/proc/scsi"
+      - "/sys/firmware"
+    ReadonlyPaths: 
+      - "/proc/bus"
+      - "/proc/fs"
+      - "/proc/irq"
+      - "/proc/sys"
+      - "/proc/sysrq-trigger"
+  GraphDriver:
+    Data: 
+      LowerDir: "/var/lib/docker/overlay2/742b98da2ba79cc37faf2e07542635e4ea0664c270bbf43d6ba2a5330717b81b-init/diff:/var/lib/docker/overlay2/72af920a245523d8dea61e332ec2067f1f01d7978cc7dfca3a0849e05b071c61/diff"
+      MergedDir: "/var/lib/docker/overlay2/742b98da2ba79cc37faf2e07542635e4ea0664c270bbf43d6ba2a5330717b81b/merged"
+      UpperDir: "/var/lib/docker/overlay2/742b98da2ba79cc37faf2e07542635e4ea0664c270bbf43d6ba2a5330717b81b/diff"
+      WorkDir: "/var/lib/docker/overlay2/742b98da2ba79cc37faf2e07542635e4ea0664c270bbf43d6ba2a5330717b81b/work"
+    Name: "overlay2"
+  Mounts: []
+  Config: 
+    Hostname: "061ee0bfdb4c"
+    Domainname: ""
+    User: ""
+    AttachStdin: true
+    AttachStdout: true
+    AttachStderr: true
+    Tty: true
+    OpenStdin: true
+    StdinOnce: true
+    Env: 
+      - "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    Cmd: 
+      - "/bin/bash"
+    Image: "ubuntu"
+    Volumes: null
+    WorkingDir: ""
+    Entrypoint: null
+    OnBuild: null
+    Labels: {}
   NetworkSettings:
-    Networks:
+    Bridge: ""
+    SandboxID: "ee632771c1160712f8969f7618a7478f87d4c93d861e7116807ae2714ddb1770"
+    HairpinMode: false
+    LinkLocalIPv6Address: ""
+    LinkLocalIPv6PrefixLen: 0
+    Ports: {}
+    SandboxKey: "/var/run/docker/netns/ee632771c116"
+    SecondaryIPAddresses: null
+    SecondaryIPv6Addresses: null
+    EndpointID: "add8584fb762d4ca7fbd82d193a5cc29c2011aa5ab14fcd4a1b2b58eb6d7c447"
+    Gateway: "172.17.0.1"
+    GlobalIPv6Address: ""
+    GlobalIPv6PrefixLen: 0
+    IPAddress: "172.17.0.2"
+    IPPrefixLen: 16
+    IPv6Gateway: ""
+    MacAddress: "02:42:ac:11:00:02"
+    Networks: 
       bridge:
         IPAMConfig: null
         Links: null
         Aliases: null
-        NetworkID: "889ced293875ecf6a1b363fbc4e74e178da0d8790925dd9269ab020706717d2b"
-        EndpointID: "46f05b9feb1025b67e24e17afb91099beaa911b40c9ae3a287b781e75244e677"
+        NetworkID: "d090b24d3ee3a86556b2bed809e6bb497a4ba71dc451d3102adf53172cd3288f"
+        EndpointID: "add8584fb762d4ca7fbd82d193a5cc29c2011aa5ab14fcd4a1b2b58eb6d7c447"
         Gateway: "172.17.0.1"
         IPAddress: "172.17.0.2"
         IPPrefixLen: 16
-        IPv6Gateway: ''
-        GlobalIPv6Address: ''
+        IPv6Gateway: ""
+        GlobalIPv6Address: ""
         GlobalIPv6PrefixLen: 0
         MacAddress: "02:42:ac:11:00:02"
-        DriverOpts: null
-  Mounts: []
+        DriverOpts": null
