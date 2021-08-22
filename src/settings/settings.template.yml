@@ -1,6 +1,5 @@
 sensor:
-  id: 'default'
-  type: 'docker'
+  id: 'sensor_default'
   log_file: true
 
 mongodb:
@@ -10,3 +9,10 @@ headers:
   Server: "Docker/18.05.0-ce (linux)"
   Docker-Experimental: false
   Ostype: linux
+
+misp:
+  enabled: true
+  url: ''
+  key: ''
+  verify: False
+  cert: ''

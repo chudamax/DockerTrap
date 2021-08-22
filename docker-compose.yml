@@ -9,3 +9,8 @@ services:
       - 0.0.0.0:2375:2375
     environment:
       - sensor_id=sensor_1
+  analyzer:
+     build: 
+      context: .
+      dockerfile: dockerfiles/analyzer
+

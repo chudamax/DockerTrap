@@ -6,3 +6,4 @@ gunicorn
 pymisp
 pytz
 python-dateutil
+colorama

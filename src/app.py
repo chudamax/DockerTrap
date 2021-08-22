@@ -4,6 +4,8 @@ import secrets
 import os
 import dateutil.parser
 
+import mongoengine
+
 import logging
 from logging.handlers import RotatingFileHandler
 
@@ -150,7 +152,10 @@ def create_container(id):
         if type(container_request['Cmd']) is list:
             cmd = ' '.join(container_request['Cmd'])
         else:
-            cmd = container_request['Cmd']
+            if container_request['Cmd']:
+                cmd = container_request['Cmd']
+            else:
+                cmd = ''
         
         with open(MODELS_TEMPLATES_DIR + '/containers.yml') as file:
             new_container = yaml.load(file, Loader=yaml.FullLoader)['default']
@@ -237,6 +242,28 @@ def container_resize(api_version, container_id):
 @app.route('/v<api_version>/containers/<container_id>', methods = ['DELETE'], endpoint='container_delete')
 def container_delete(api_version, container_id):
     return Response()
+
+#/v1.41/containers/061ee0bfdb4c/json
+@app.route('/v<api_version>/containers/<container_id>/json', endpoint='container_info')
+def container_info(api_version, container_id):
+    containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
+    if len(containers) > 0:
+        return jsonify(containers[0])
+    else:
+        answer = {'message':'No such container: {}'.format(container_id)}
+        return jsonify(answer), 404
+
+#/v1.41/containers/061ee0bfdb4c/exec
+@app.route('/v<api_version>/containers/<container_id>/exec', methods = ['POST'], endpoint='container_exec')
+def container_exec(api_version, container_id):
+    if request.method == 'POST':
+        data = request.get_json()
+        answer = {"Id":container_id}
+        return jsonify(answer),201
+
+@app.route('/v<api_version>/exec/<container_id>/start', methods = ['POST'], endpoint='exec_start')
+def exec_start(api_version, container_id):
+    return '', 200
 
 #GET
 #http://ip:2375/v1.24/events?filters={"container":{"cb0ef905f1aa248e32261af63a39da3988287bcf6323e0e368bfa7fef212950a":true},"type":{"container":true}}
@@ -368,10 +395,15 @@ def view_containers(api_version):
         new_container['Names'] = [container['Name']]
         new_container['Image'] = container['Config']['Image']
         new_container['ImageID'] = container['Image'].split(":")[1]
-        if container['Config']['Cmd']:
+
+        if type(container['Config']['Cmd']) is mongoengine.base.datastructures.BaseList:
             new_container['Command'] = ' '.join(container['Config']['Cmd'])
         else:
-            container['Config']['Cmd'] = ''
+            if container['Config']['Cmd']:
+                new_container['Command'] = container['Config']['Cmd']
+            else:
+                new_container['Command'] = ''
+            
         new_container['Created'] = int(dateutil.parser.isoparse(container['Created']).timestamp())
         new_container['Ports'] = []
         new_container['Labels'] = {}
@@ -390,23 +422,7 @@ def view_containers(api_version):
 def images_info(api_version):
     return jsonify(DockerImage.objects(SensorId=settings['sensor']['id']))
 
-#/v1.41/containers/061ee0bfdb4c/json
-@app.route('/v<api_version>/containers/<container_id>/json', endpoint='container_info')
-def container_info(api_version, container_id):
-    containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
-    return jsonify(containers[0])
 
-#/v1.41/containers/061ee0bfdb4c/exec
-@app.route('/v<api_version>/containers/<container_id>/exec', methods = ['POST'], endpoint='container_exec')
-def container_exec(api_version, container_id):
-    if request.method == 'POST':
-        data = request.get_json()
-        answer = {"Id":container_id}
-        return jsonify(answer),201
-
-@app.route('/v<api_version>/exec/<container_id>/start', methods = ['POST'], endpoint='exec_start')
-def exec_start(api_version, container_id):
-    return '', 200
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port='2375')

@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 import os
 import datetime
 import yaml
@@ -12,88 +18,110 @@ colorama.init()
 from pymongo import MongoClient
 from utils import extract_urls
 
-from pymisp import ExpandedPyMISP, MISPEvent, MISPTag
-
 def detect_action(request):
-    path = request['Url']
+    path = request['Path']
+    method = request['Method']
 
-    if path.endswith('/_ping') or path.endswith('/version') or path.endswith('/info') or path.endswith('/containers/json') or path.endswith('/images/json'):
-        print ('{}: Docker instance enumeration'.format(request['SourceIP']))
+    if path.endswith('/_ping') or path.endswith('/version') or path.endswith('/info'):
+        action = 'docker_service_enumeration'
+
+    elif path.endswith('/containers/json') or re.match(r'\/v[\d.]*\/containers\/.*\/json', path):
+        action = 'docker_containers_enumeration'
+
+    elif path.endswith('/images/json'):
+        action = 'docker_images_enumeration'
+
     elif path.endswith('/containers/create'):
-        print ('{}: Docker container creaion attempt'.format(request['SourceIP']))
+        action = 'docker_containers_create'
+
     elif path.endswith('/images/create'):  
-        print ('{}: Docker image creation attempt'.format(request['SourceIP']))
-    elif path.endswith('/attach'):  
-        pass
+        action = 'docker_images_create'
+
+    elif path.endswith('/exec'):
+        action = 'docker_container_exec'
+
+    elif path.endswith('/start') or path.endswith('/attach') or path.endswith('/resize') or path.endswith('/events') or path == ('/'):
+        action = 'other'
+
+    elif method == 'DELETE' and 'containers' in path:
+        action = 'docker_container_delete'
+
+    elif re.match(r'\/v[\d.]*\/containers\/[\d\w]*\/json', path):
+        action = 'docker_container_enumeration'
     else:
+        action = 'unhandled'
+    
+    return action
+
+def handle_change(change, misp_event=None):
+    request = change['fullDocument']
+    data_json = request['DataJson']
+
+    action = detect_action(request)
+    dt = datetime.datetime.now().strftime("[%d/%m/%Y %H:%M:%S]")
+    path = request['Path']
+
+    if action == 'docker_service_enumeration':
+        print (Fore.GREEN + '{} {} Docker service enumeration [{}]'.format(dt, request['SourceIP'], path))
+
+    elif action == 'docker_containers_enumeration':
+        print (Fore.GREEN + '{} {} Docker containers enumeration [{}]'.format(dt, request['SourceIP'], path))
+
+    elif action == 'docker_images_enumeration':
+        print (Fore.GREEN + '{} {} Docker images enumeration [{}]'.format(dt, request['SourceIP'], path))
+
+    elif action == 'docker_containers_create':
+        cmd = data_json.get('Cmd')
+        entrypoint = data_json.get('Entrypoint')
+        env = data_json.get('Env')
+        image = data_json.get('Image')
+
+        urls = []
+
+        if cmd:
+            cmd = ' '.join(cmd)
+            urls += extract_urls(cmd=cmd)
+
+        if entrypoint:
+            entrypoint = ' '.join(entrypoint)
+            urls += extract_urls(cmd=entrypoint)
+
+        urls = list(set(urls))
+
+        print (Fore.MAGENTA + '{} {} Docker container creation attempt [{}]'.format(dt, request['SourceIP'], path))
+        print (Fore.YELLOW + 'Image: {}'.format(image))
+
+        if env:
+            print (Fore.YELLOW + 'Env: {}'.format(data_json.get('Env')))
+
+        if cmd:
+            print (Fore.YELLOW + 'Cmd: {}'.format(cmd))
+
+        if entrypoint:
+            print (Fore.YELLOW + 'Entrypoint: {}'.format(entrypoint))
+
+        if urls:
+            print (Fore.YELLOW + 'Extracted URLs: {}'.format(urls))
+
+    elif action == 'docker_images_create':
+        print (Fore.MAGENTA + '{} {} Docker image creation attempt [{}]'.format(dt, request['SourceIP'], path))
+        print (Fore.YELLOW + 'Image: {} Tag: {}'.format(request['Args']['fromImage'], request['Args']['tag']))
+
+    elif action == 'docker_container_exec':
+        print (Fore.MAGENTA + '{} {} Docker container execution request [{}]'.format(dt, request['SourceIP'], path))
+        print (request)
+
+    elif action =='docker_container_delete':
+        print (Fore.MAGENTA + '{} {} Docker container DELETE request [{}]'.format(dt, request['SourceIP'], path))
+
+    elif action == 'docker_container_enumeration':
+        print (Fore.GREEN + '{} {} Docker container enumeration[{}]'.format(dt, request['SourceIP'], path))
+
+    elif action == 'unhandled':
         print ('Unhandled Event')
         print (request)
 
-
-def handle_change(change):
-    request = change['fullDocument']
-
-    #data_json = request['DataJson']
-
-    action = detect_action(request)
-
-
-    # print_log = '{} [{}]: {} {} {}'.format(
-    #         datetime.datetime.now().isoformat(),
-    #         request['SensorId'],
-    #         request['SourceIP'],
-    #         request['Method'], 
-    #         request['Url']
-    #     )
-
-    # exploitation_attempt = False
-
-    # if data_json.get('Cmd') and len(data_json['Cmd']) > 0:
-    #     cmd = data_json.get('Cmd')
-    #     cmd_str = ' '.join(cmd)
-    # else:
-    #     cmd_str = ''
-    
-
-    # if data_json.get('Entrypoint') and len(data_json['Entrypoint']) > 0:
-    #     entrypoint = data_json.get('Entrypoint')
-    #     entrypoint_str = ' '.join(entrypoint)
-    # else:
-    #     entrypoint_str = ''
-    
-    # image = data_json.get('Image')
-
-    # if image:
-    #     print_log += '\nImage: {}'.format(image)
-
-    # if cmd_str:
-    #     exploitation_attempt = True
-    #     print_log += '\nCmd: {}'.format(cmd_str)
-
-    #     urls = extract_urls(cmd_str)
-    #     if urls:
-    #         print_log += '\nURLs: {}'.format(urls)
-
-    # if entrypoint_str:
-    #     exploitation_attempt = True
-    #     print_log += '\nEntrypoint: {}'.format(entrypoint_str)
-        
-    #     urls = extract_urls(entrypoint_str)
-    #     if urls:
-    #         print_log += '\nURLs: {}'.format(urls)
-
-    # if exploitation_attempt:
-    #     print(Fore.MAGENTA + '{}'.format(print_log))
-    # else:
-    #     print(Fore.GREEN + '{}'.format(print_log))
-
-
 def main():
-
-    parser = argparse.ArgumentParser(description='Push detected IOCs to a MISP instance.')
-    parser.add_argument("-e", "--misp-event", help="New events MISP event id, DockerTrap + current date by default")
-    
-    args = parser.parse_args()
 
     CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
     SETTINGS_PATH = os.path.join(CURRENT_DIR, 'settings', 'settings.yml')
@@ -108,7 +136,6 @@ def main():
             handle_change(change)
         except Exception as err:
             print (err)
-
 
 if __name__ == "__main__":
     main()

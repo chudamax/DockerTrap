@@ -1,5 +1,7 @@
 **/*_log.txt
 **/settings.yml
+**/*.json
+**/*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
