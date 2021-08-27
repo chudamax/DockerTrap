@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import json, yaml
 import datetime, time
 import secrets
@@ -37,8 +40,6 @@ def docker_headers_mimicking(response):
 
 @app.before_request 
 def before_request_callback():
-    # if request.get_json():
-    #     print (request.get_json())
 
     date_now_utc = datetime.datetime.utcnow()
 
@@ -53,7 +54,7 @@ def before_request_callback():
         'Url': request.url,
         'Headers': dict(request.headers),
         'DataJson': request.get_json(),
-        'Data': str(request.get_data()),
+        'Data': request.get_data(),
         'SourceIP': request.remote_addr
     }
 
@@ -62,6 +63,7 @@ def before_request_callback():
     if settings['sensor']['log_file']:
         #dirty, but works
         log_params['Date'] = str(date_now_utc)
+        log_params['Data'] = str(request.get_data())
 
         date_str = date_now_utc.strftime('%d_%m_%Y')
         log_path = os.path.join(CURRENT_DIR,'logs', date_str + '_log.json')
@@ -134,6 +136,16 @@ def info(api_version=None):
         yield json.dumps(docker_dict)
 
     return Response(generate(), mimetype='application/json')
+
+#HEAD /v1.41/containers/2628/archive?path=%2Ftmp%2F2.txt
+#PUT /v1.41/containers/2628/archive?noOverwriteDirNonDir=true&path=%2Ftmp HTTP/1.1
+@app.route('/v<id>/containers/<container_id>/archive', methods = ['POST', 'GET', 'HEAD', 'PUT'], endpoint='put_file')
+def put_file(id,container_id):
+    if request.method == 'HEAD':
+        return '', 404
+    else:
+        path = request.args.get("path")
+        return '', 200
 
 @app.route('/v<id>/containers/create', methods = ['POST', 'GET'], endpoint='container_create')
 def create_container(id):
@@ -385,6 +397,23 @@ def events(api_version):
 def container_start(api_version, container_id):
     return '', 204
 
+#/v1.24/containers/061ee0bfdb4c/kill
+@app.route('/v<api_version>/containers/<container_id>/kill', methods = ['POST'], endpoint='container_kill')
+def container_kill(api_version, container_id):
+    containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
+    if len(containers) > 0:
+        containers[0].delete()
+        return '', 200
+    else:
+        answer = {'message':'No such container: {}'.format(container_id)}
+        return jsonify(answer), 404
+
+@app.route('/build', methods = ['POST'], endpoint='build')
+@app.route('/v<api_version>/build', methods = ['POST'], endpoint='build')
+def build(api_version=None):
+    return '', 200
+
+
 @app.route('/v<api_version>/containers/json', endpoint='view_containers')
 def view_containers(api_version):
 
@@ -418,10 +447,11 @@ def view_containers(api_version):
 
     return jsonify(containers)
     
-@app.route('/v<api_version>/images/json', endpoint='images_info')
-def images_info(api_version):
-    return jsonify(DockerImage.objects(SensorId=settings['sensor']['id']))
+@app.route('/v<api_version>/images/<image_id>/json', endpoint='image_info')
+def image_info(api_version, image_id):
+    return jsonify(DockerImage.objects(SensorId=settings['sensor']['id'], Id=image_id))
 
+#/v1.37/images/9873176a8ff5ac192ce4d7df8a403787558b9f3981a4c4d74afb3edceeda451c/json
 
 
 if __name__ == "__main__":

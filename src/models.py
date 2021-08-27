@@ -139,6 +139,6 @@ class HttpRequestLog(db.Document):
     Url = db.StringField(required=True)
     Headers = db.DictField()
     DataJson = db.DictField()
-    Data = db.StringField()
+    Data = db.BinaryField()
     SourceIP = db.StringField(required=True)
 

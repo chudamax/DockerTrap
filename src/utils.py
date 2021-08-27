@@ -25,6 +25,12 @@ def get_settings():
         'misp':{}
     }
 
+    settings['headers'] = {
+        'Server': "Docker/18.05.0-ce (linux)",
+        'Docker-Experimental': 'false',
+        'Ostype': 'linux'
+    }
+
     with open(SETTINGS_PATH, 'r') as stream:
         file_settings = yaml.safe_load(stream)
 
@@ -36,7 +42,10 @@ def get_settings():
         settings['sensor']['id'] = 'sensor_' + get_random_name()[1:]
 
     if 'log_file' in os.environ:
-        settings['sensor']['log_file'] = os.environ['log_file']
+        if os.environ['log_file'].lower() == 'true':
+            settings['sensor']['log_file'] = True
+        else:
+            settings['sensor']['log_file'] = False
     else:
         settings['sensor']['log_file'] = file_settings['sensor']['log_file']
 
@@ -44,8 +53,6 @@ def get_settings():
         settings['mongodb']['uri'] = os.environ['mongodb_uri']
     else:
         settings['mongodb']['uri'] = file_settings['mongodb']['uri']
-
-    settings['headers'] = file_settings['headers']
 
     if 'misp_url' in os.environ:
         settings['misp']['url'] = os.environ['misp_url']
@@ -58,7 +65,10 @@ def get_settings():
         settings['misp']['key'] = file_settings['misp']['key']
 
     if 'misp_verify' in os.environ:
-        settings['misp']['verify'] = os.environ['misp_verify']
+        if os.environ['misp_verify'].lower() == 'true':
+            settings['misp']['verify'] = True
+        else:
+            settings['misp']['verify'] = False
     else:
         settings['misp']['verify'] = file_settings['misp']['verify']
 

@@ -10,13 +10,14 @@ import yaml
 import json
 import re
 import argparse
+import tarfile, gzip, io
 
 import colorama
 from colorama import init, Fore, Back, Style
 colorama.init()
 
 from pymongo import MongoClient
-from utils import extract_urls
+from utils import extract_urls, get_settings
 
 def detect_action(request):
     path = request['Path']
@@ -34,13 +35,25 @@ def detect_action(request):
     elif path.endswith('/containers/create'):
         action = 'docker_containers_create'
 
+    elif method == 'HEAD' and 'archive' in path:
+        action = 'docker_containers_check_file'
+
+    elif method == 'POST' and 'archive' in path:
+        action = 'docker_containers_put_file'
+
+    elif path.endswith('/containers/kill'):
+        action = 'docker_containers_kill'
+
     elif path.endswith('/images/create'):  
         action = 'docker_images_create'
 
     elif path.endswith('/exec'):
         action = 'docker_container_exec'
 
-    elif path.endswith('/start') or path.endswith('/attach') or path.endswith('/resize') or path.endswith('/events') or path == ('/'):
+    elif path.endswith('/build'):
+        action = 'docker_container_build'
+
+    elif path.endswith('/start') or path.endswith('/attach') or path.endswith('/resize') or path.endswith('/events') or path == ('/') or path == ('/favicon.ico'):
         action = 'other'
 
     elif method == 'DELETE' and 'containers' in path:
@@ -66,6 +79,14 @@ def handle_change(change, misp_event=None):
 
     elif action == 'docker_containers_enumeration':
         print (Fore.GREEN + '{} {} Docker containers enumeration [{}]'.format(dt, request['SourceIP'], path))
+
+    elif action == 'docker_containers_check_file':
+        filepath = request.args.get("path")
+        print (Fore.GREEN + '{} {} Docker container check file: {} [{}]'.format(dt, request['SourceIP'], filepath, path))
+
+    elif action == 'docker_containers_put_file':
+        dirpath = request.args.get("path")
+        print (Fore.GREEN + '{} {} Docker container put file to: {} [{}]'.format(dt, request['SourceIP'], dirpath, path))
 
     elif action == 'docker_images_enumeration':
         print (Fore.GREEN + '{} {} Docker images enumeration [{}]'.format(dt, request['SourceIP'], path))
@@ -109,24 +130,41 @@ def handle_change(change, misp_event=None):
 
     elif action == 'docker_container_exec':
         print (Fore.MAGENTA + '{} {} Docker container execution request [{}]'.format(dt, request['SourceIP'], path))
-        print (request)
 
     elif action =='docker_container_delete':
         print (Fore.MAGENTA + '{} {} Docker container DELETE request [{}]'.format(dt, request['SourceIP'], path))
 
+    elif action =='docker_container_kill':
+        print (Fore.MAGENTA + '{} {} Docker container KILL request [{}]'.format(dt, request['SourceIP'], path))
+
     elif action == 'docker_container_enumeration':
         print (Fore.GREEN + '{} {} Docker container enumeration[{}]'.format(dt, request['SourceIP'], path))
+
+    elif action == 'docker_container_build':
+        print (Fore.MAGENTA + '{} {} Docker container build attempt[{}]'.format(dt, request['SourceIP'], path))
+
+        if request['Data'][:2] == b'\x1f\x8b':
+            b = gzip.decompress(request['Data'])
+            file_like_object = io.BytesIO(b)
+        else:
+            file_like_object = io.BytesIO(request['Data'])
+
+        tar = tarfile.open(fileobj=file_like_object)
+        dockerfile = tar.extractfile(tar.getmembers()[0]).read().decode('utf-8')
+        urls = extract_urls(cmd=dockerfile)
+
+        if dockerfile:
+            print (Fore.YELLOW + 'Dockerfile:\n{}'.format(dockerfile))
+
+        if urls:
+            print (Fore.YELLOW + 'Extracted URLs: {}'.format(urls))
 
     elif action == 'unhandled':
         print ('Unhandled Event')
         print (request)
 
 def main():
-
-    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    SETTINGS_PATH = os.path.join(CURRENT_DIR, 'settings', 'settings.yml')
-    with open(SETTINGS_PATH) as file:
-        settings = yaml.load(file, Loader=yaml.FullLoader)
+    settings = get_settings()
     
     client = MongoClient(settings['mongodb']['uri'])
 
