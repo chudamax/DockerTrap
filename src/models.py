@@ -113,20 +113,20 @@ class DockerContainer(db.Document):
     GraphDriver = db.DictField()
     Mounts = db.ListField()
     Config = db.DictField()
-    NetworkSettings = db.DictField()
-
-    # Names = db.ListField(required=True)
+    NetworkSettings = db.DictField()    
     
-    # ImageID = db.StringField(required=True)
-    # Command = db.StringField()
-    
-    # Ports = db.ListField()
-    # Labels = db.DictField()
-    # State = db.StringField(required=True)
-    # Status = db.StringField(required=True)
-    
-    
-    
+class DockerExec(db.Document):
+    Id = db.StringField(required=True)
+    Running = db.BooleanField(required=True)
+    ExitCode = db.IntField(required=True)
+    ProcessConfig = db.DictField()
+    OpenStdin = db.BooleanField(required=True) 
+    OpenStderr = db.BooleanField(required=True)
+    OpenStdout = db.BooleanField(required=True)
+    CanRemove = db.BooleanField(required=True)
+    ContainerID = db.StringField(required=True)
+    DetachKeys = db.StringField()
+    Pid = db.IntField(required=True)   
 
 class HttpRequestLog(db.Document):
     Date = db.DateTimeField(default=datetime.datetime.utcnow)

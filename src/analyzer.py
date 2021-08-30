@@ -29,7 +29,7 @@ def detect_action(request):
     elif path.endswith('/containers/json') or re.match(r'\/v[\d.]*\/containers\/.*\/json', path):
         action = 'docker_containers_enumeration'
 
-    elif path.endswith('/images/json'):
+    elif path.endswith('/images/json') or re.match(r'\/v[\d.]*\/images\/.*\/json', path)::
         action = 'docker_images_enumeration'
 
     elif path.endswith('/containers/create'):

@@ -15,7 +15,7 @@ from logging.handlers import RotatingFileHandler
 from flask import Flask, make_response, jsonify, request, Response, stream_with_context, redirect
 from flask_mongoengine import MongoEngine
 
-from models import db, Docker, DockerImage, DockerContainer, HttpRequestLog
+from models import db, Docker, DockerImage, DockerContainer, HttpRequestLog, DockerExec
 from utils import get_random_name, get_settings
 
 
@@ -139,16 +139,18 @@ def info(api_version=None):
 
 #HEAD /v1.41/containers/2628/archive?path=%2Ftmp%2F2.txt
 #PUT /v1.41/containers/2628/archive?noOverwriteDirNonDir=true&path=%2Ftmp HTTP/1.1
-@app.route('/v<id>/containers/<container_id>/archive', methods = ['POST', 'GET', 'HEAD', 'PUT'], endpoint='put_file')
-def put_file(id,container_id):
+@app.route('/containers/<container_id>/archive', methods = ['POST', 'GET', 'HEAD', 'PUT'], endpoint='put_file')
+@app.route('/v<api_version>/containers/<container_id>/archive', methods = ['POST', 'GET', 'HEAD', 'PUT'], endpoint='put_file')
+def put_file(container_id, api_version=None):
     if request.method == 'HEAD':
         return '', 404
     else:
         path = request.args.get("path")
         return '', 200
 
-@app.route('/v<id>/containers/create', methods = ['POST', 'GET'], endpoint='container_create')
-def create_container(id):
+@app.route('/containers/create', methods = ['POST', 'GET'], endpoint='container_create')
+@app.route('/v<api_version>/containers/create', methods = ['POST', 'GET'], endpoint='container_create')
+def create_container(api_version=None):
     if request.method == 'POST':
        
         container_request = request.get_json()
@@ -184,7 +186,10 @@ def create_container(id):
         new_container['HostnamePath'] =  "/var/lib/docker/containers/{}/hostname".format(container_id)
         new_container['HostsPath'] =  "/var/lib/docker/containers/{}/hosts".format(container_id)
         new_container['LogPath'] =  "/var/lib/docker/containers/{0}/{0}-json.log".format(container_id)
-        new_container['Name'] = get_random_name()
+        if request.args.get("name"):
+            new_container['Name'] = request.args.get("name")
+        else:
+            new_container['Name'] = get_random_name()
         new_container['Config']['Hostname'] = secrets.token_hex(6)
         new_container['Config']['Cmd'] = cmd
         new_container['NetworkSettings']['Networks']['bridge']['NetworkID'] = secrets.token_hex(32)
@@ -202,8 +207,9 @@ def create_container(id):
         return jsonify("")
 
 #/v1.24/images/create?fromImage=alpine&tag=latest
-@app.route('/v<id>/images/create', methods = ['POST', 'GET'], endpoint='image_create')
-def image_create(id):
+@app.route('/images/create', methods = ['POST', 'GET'], endpoint='image_create')
+@app.route('/v<api_version>/images/create', methods = ['POST', 'GET'], endpoint='image_create')
+def image_create(api_version=None):
     if request.method == 'POST':
         image = request.args.get("fromImage")
         tag = request.args.get("tag")
@@ -238,49 +244,94 @@ def image_create(id):
 
 #POST
 #http://ip:2375/v1.24/containers/cb0ef905f1aa248e32261af63a39da3988287bcf6323e0e368bfa7fef212950a/attach?stderr=1&stdout=1&stream=1
+@app.route('/containers/<container_id>/attach', methods = ['POST'], endpoint='container_attach')
 @app.route('/v<api_version>/containers/<container_id>/attach', methods = ['POST'], endpoint='container_attach')
-def container_attach(api_version, container_id):
+def container_attach(container_id, api_version=None):
 
-    resp = Response("uid=0(root) gid=0(root) groups=0(root)")
+    containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
+    if len(containers) == 0:
+        return '', 404
+
+    cmd = containers[0]['Config']['Cmd']
+    if cmd in ['id','whoami']:
+        resp = Response("uid=0(root) gid=0(root) groups=0(root)")
+    else:
+        resp = Response("")
+
     resp.headers['Content-Type'] = 'application/vnd.docker.raw-stream'
     resp.headers['Connection'] = 'Upgrade'
     resp.headers['Upgrade'] = 'tcp'
-    return resp, 101
+    return resp, 200
 
 @app.route('/v<api_version>/containers/<container_id>/resize', methods = ['POST'], endpoint='container_resize')
-def container_resize(api_version, container_id):
+@app.route('/containers/<container_id>/resize', methods = ['POST'], endpoint='container_resize')
+def container_resize(container_id, api_version=None,):
     return Response()
 
 @app.route('/v<api_version>/containers/<container_id>', methods = ['DELETE'], endpoint='container_delete')
-def container_delete(api_version, container_id):
+@app.route('/containers/<container_id>', methods = ['DELETE'], endpoint='container_delete')
+def container_delete(container_id, api_version=None):
     return Response()
 
 #/v1.41/containers/061ee0bfdb4c/json
 @app.route('/v<api_version>/containers/<container_id>/json', endpoint='container_info')
-def container_info(api_version, container_id):
+@app.route('/containers/<container_id>/json', endpoint='container_info')
+def container_info(container_id, api_version=None):
     containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
     if len(containers) > 0:
         return jsonify(containers[0])
-    else:
-        answer = {'message':'No such container: {}'.format(container_id)}
-        return jsonify(answer), 404
+
+    containers = DockerContainer.objects(Name='/{}'.format(container_id))
+    if len(containers) > 0:
+        return jsonify(containers[0])
+
+    answer = {'message':'No such container: {}'.format(container_id)}
+    return jsonify(answer), 404
 
 #/v1.41/containers/061ee0bfdb4c/exec
-@app.route('/v<api_version>/containers/<container_id>/exec', methods = ['POST'], endpoint='container_exec')
-def container_exec(api_version, container_id):
-    if request.method == 'POST':
-        data = request.get_json()
-        answer = {"Id":container_id}
-        return jsonify(answer),201
+# @app.route('/v<api_version>/containers/<container_id>/exec', methods = ['POST'], endpoint='container_exec')
+# @app.route('/containers/<container_id>/exec', methods = ['POST'], endpoint='container_exec')
+# def container_exec(api_version=None, container_id):
+#     if request.method == 'POST':
+
+#         containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
+#         if len(containers) == 0:
+#             answer = {'message':'No such container: {}'.format(container_id)}
+#             return jsonify(answer), 404
+
+#         container = containers[0]
+
+#         data = request.get_json()
+#         new_exec = {}
+#         new_exec['Id'] = secrets.token_hex(32)
+#         new_exec['Running'] = False
+#         new_exec['ExitCode'] = 0
+#         new_exec['ProcessConfig'] = {}
+#         new_exec['OpenStdin'] = False
+#         new_exec['OpenStderr'] = False
+#         new_exec['OpenStdout'] = False
+#         new_exec['CanRemove'] = False
+#         new_exec['ContainerID'] = False
+        
+#         new_exec['DetachKeys'] = 
+#         new_exec['Pid'] = 
+#         new_exec['SensorId'] = settings['sensor']['id']
+
+#         o = DockerExec(**new_exec).save()
+
+#         answer = {"Id":new_exec['Id']}
+#         return jsonify(answer),201
 
 @app.route('/v<api_version>/exec/<container_id>/start', methods = ['POST'], endpoint='exec_start')
+@app.route('/exec/<container_id>/start', methods = ['POST'], endpoint='exec_start')
 def exec_start(api_version, container_id):
     return '', 200
 
 #GET
 #http://ip:2375/v1.24/events?filters={"container":{"cb0ef905f1aa248e32261af63a39da3988287bcf6323e0e368bfa7fef212950a":true},"type":{"container":true}}
 @app.route('/v<api_version>/events', methods = ['GET'], endpoint='events')
-def events(api_version):
+@app.route('/events', methods = ['GET'], endpoint='events')
+def events(api_version=None):
 
     filters = json.loads(request.args.get("filters"))
     id = list(filters['container'].keys())[0]
@@ -394,11 +445,13 @@ def events(api_version):
 
 #POST /v1.24/containers/cb0ef905f1aa248e32261af63a39da3988287bcf6323e0e368bfa7fef212950a/start HTTP/1.1
 @app.route('/v<api_version>/containers/<container_id>/start', methods = ['POST'], endpoint='container_start')
+@app.route('/containers/<container_id>/start', methods = ['POST'], endpoint='container_start')
 def container_start(api_version, container_id):
     return '', 204
 
 #/v1.24/containers/061ee0bfdb4c/kill
 @app.route('/v<api_version>/containers/<container_id>/kill', methods = ['POST'], endpoint='container_kill')
+@app.route('/containers/<container_id>/kill', methods = ['POST'], endpoint='container_kill')
 def container_kill(api_version, container_id):
     containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
     if len(containers) > 0:
@@ -414,8 +467,9 @@ def build(api_version=None):
     return '', 200
 
 
+@app.route('/containers/json', endpoint='view_containers')
 @app.route('/v<api_version>/containers/json', endpoint='view_containers')
-def view_containers(api_version):
+def view_containers(api_version=None):
 
     containers = []
     for container in DockerContainer.objects(SensorId=settings['sensor']['id']):
@@ -446,12 +500,38 @@ def view_containers(api_version):
         containers.append(new_container)
 
     return jsonify(containers)
-    
-@app.route('/v<api_version>/images/<image_id>/json', endpoint='image_info')
-def image_info(api_version, image_id):
-    return jsonify(DockerImage.objects(SensorId=settings['sensor']['id'], Id=image_id))
+
+@app.route('/images/json', endpoint='view_images')
+@app.route('/v<api_version>/images/json', endpoint='view_images')
+def view_images(api_version=None):
+    images = []
+    for image in DockerImage.objects(SensorId=settings['sensor']['id']):
+        new_image = {}
+        new_image['Containers'] = image['Containers']
+        new_image['Created'] =  image['Created']
+        new_image['Id'] = 'sha256:{}'.format(image['Id'])
+        new_image['Labels'] = image['Labels']
+        new_image['ParentId'] =  image['ParentId']
+        new_image['RepoDigests'] = image['RepoDigests']
+        new_image['RepoTags'] =  image['RepoTags']
+        new_image['SharedSize'] =  image['SharedSize']
+        new_image['Size'] =  image['Size']
+        new_image['VirtualSize'] = image['VirtualSize']
+
+        images.append(new_image)
+
+    return jsonify(images)
 
 #/v1.37/images/9873176a8ff5ac192ce4d7df8a403787558b9f3981a4c4d74afb3edceeda451c/json
+#TODO
+@app.route('/v<api_version>/images/<image_id>/json', endpoint='image_info')
+@app.route('/images/<image_id>/json', endpoint='image_info')
+def image_info(api_version, image_id):
+    images = DockerImage.objects(SensorId=settings['sensor']['id'])
+    return '', 404
+    #return jsonify(DockerImage.objects(SensorId=settings['sensor']['id'], Id__startswith='{}'.format(image_id))[0])
+
+#GET /v1.24/exec/b39dd7401627/json 
 
 
 if __name__ == "__main__":
