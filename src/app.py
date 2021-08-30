@@ -18,7 +18,6 @@ from flask_mongoengine import MongoEngine
 from models import db, Docker, DockerImage, DockerContainer, HttpRequestLog, DockerExec
 from utils import get_random_name, get_settings
 
-
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_TEMPLATES_DIR = os.path.join(CURRENT_DIR,'templates','models')
 
@@ -265,7 +264,12 @@ def container_attach(container_id, api_version=None):
 
 @app.route('/v<api_version>/containers/<container_id>/resize', methods = ['POST'], endpoint='container_resize')
 @app.route('/containers/<container_id>/resize', methods = ['POST'], endpoint='container_resize')
-def container_resize(container_id, api_version=None,):
+def container_resize(container_id, api_version=None):
+    return Response()
+
+@app.route('/v<api_version>/exec/<container_id>/resize', methods = ['POST'], endpoint='exec_resize')
+@app.route('/exec/<container_id>/resize', methods = ['POST'], endpoint='exec_resize')
+def exec_resize(container_id, api_version=None):
     return Response()
 
 @app.route('/v<api_version>/containers/<container_id>', methods = ['DELETE'], endpoint='container_delete')
@@ -289,43 +293,76 @@ def container_info(container_id, api_version=None):
     return jsonify(answer), 404
 
 #/v1.41/containers/061ee0bfdb4c/exec
-# @app.route('/v<api_version>/containers/<container_id>/exec', methods = ['POST'], endpoint='container_exec')
-# @app.route('/containers/<container_id>/exec', methods = ['POST'], endpoint='container_exec')
-# def container_exec(api_version=None, container_id):
-#     if request.method == 'POST':
+@app.route('/v<api_version>/containers/<container_id>/exec', methods = ['POST'], endpoint='container_exec')
+@app.route('/containers/<container_id>/exec', methods = ['POST'], endpoint='container_exec')
+def container_exec(container_id, api_version=None):
+    if request.method == 'POST':
 
-#         containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
-#         if len(containers) == 0:
-#             answer = {'message':'No such container: {}'.format(container_id)}
-#             return jsonify(answer), 404
+        containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
+        if len(containers) == 0:
+            answer = {'message':'No such container: {}'.format(container_id)}
+            return jsonify(answer), 404
 
-#         container = containers[0]
+        container = containers[0]
 
-#         data = request.get_json()
-#         new_exec = {}
-#         new_exec['Id'] = secrets.token_hex(32)
-#         new_exec['Running'] = False
-#         new_exec['ExitCode'] = 0
-#         new_exec['ProcessConfig'] = {}
-#         new_exec['OpenStdin'] = False
-#         new_exec['OpenStderr'] = False
-#         new_exec['OpenStdout'] = False
-#         new_exec['CanRemove'] = False
-#         new_exec['ContainerID'] = False
+        data = request.get_json()
+        new_exec = {}
+        new_exec['Id'] = secrets.token_hex(32)
+        new_exec['Running'] = False
+        new_exec['ExitCode'] = 0
+
+        cmd_array = data.get('Cmd')
+        cmd = ''
+        if cmd_array:
+            cmd = ' '.join(cmd_array)
+
+        process_config = {"tty":True,"entrypoint":cmd,"arguments":[],"privileged":False}
+        new_exec['ProcessConfig'] = process_config
+        new_exec['OpenStdin'] = False
+        new_exec['OpenStderr'] = False
+        new_exec['OpenStdout'] = False
+        new_exec['CanRemove'] = False
+        new_exec['ContainerID'] = container_id
         
-#         new_exec['DetachKeys'] = 
-#         new_exec['Pid'] = 
-#         new_exec['SensorId'] = settings['sensor']['id']
+        new_exec['DetachKeys'] = ""
+        new_exec['Pid'] = 1637
+        new_exec['SensorId'] = settings['sensor']['id']
 
-#         o = DockerExec(**new_exec).save()
+        o = DockerExec(**new_exec).save()
 
-#         answer = {"Id":new_exec['Id']}
-#         return jsonify(answer),201
+        answer = {"Id":new_exec['Id']}
+        return jsonify(answer),201
 
-@app.route('/v<api_version>/exec/<container_id>/start', methods = ['POST'], endpoint='exec_start')
-@app.route('/exec/<container_id>/start', methods = ['POST'], endpoint='exec_start')
-def exec_start(api_version, container_id):
-    return '', 200
+@app.route('/v<api_version>/exec/<exec_id>/start', methods = ['POST'], endpoint='exec_start')
+@app.route('/exec/<exec_id>/start', methods = ['POST'], endpoint='exec_start')
+def exec_start(api_version, exec_id):
+
+    exec_list = DockerExec.objects(Id__startswith='{}'.format(exec_id))
+    if len(exec_list) == 0:
+        answer = {'message':'No such container: {}'.format(exec_id)}
+        return jsonify(answer), 404
+    exec_obj = exec_list[0]
+
+    cmd = exec_obj.ProcessConfig.get('entrypoint')
+    if cmd in ['id','whoami']:
+        resp = Response("uid=0(root) gid=0(root) groups=0(root)")
+    else:
+        resp = Response("")
+
+    return resp
+
+@app.route('/v<api_version>/exec/<exec_id>/json', methods = ['GET'], endpoint='exec_view')
+@app.route('/exec/<exec_id>/json', methods = ['POST'], endpoint='exec_view')
+def exec_view(api_version, exec_id):
+
+    exec_list = DockerExec.objects(Id__startswith='{}'.format(exec_id))
+    if len(exec_list) == 0:
+        answer = {'message':'No such container: {}'.format(exec_id)}
+        return jsonify(answer), 404
+
+    exec_obj = exec_list[0]   
+
+    return jsonify(exec_obj)
 
 #GET
 #http://ip:2375/v1.24/events?filters={"container":{"cb0ef905f1aa248e32261af63a39da3988287bcf6323e0e368bfa7fef212950a":true},"type":{"container":true}}
@@ -530,9 +567,6 @@ def image_info(api_version, image_id):
     images = DockerImage.objects(SensorId=settings['sensor']['id'])
     return '', 404
     #return jsonify(DockerImage.objects(SensorId=settings['sensor']['id'], Id__startswith='{}'.format(image_id))[0])
-
-#GET /v1.24/exec/b39dd7401627/json 
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port='2375')

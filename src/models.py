@@ -116,6 +116,7 @@ class DockerContainer(db.Document):
     NetworkSettings = db.DictField()    
     
 class DockerExec(db.Document):
+    SensorId = db.StringField(required=True)
     Id = db.StringField(required=True)
     Running = db.BooleanField(required=True)
     ExitCode = db.IntField(required=True)
