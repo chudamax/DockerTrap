@@ -57,7 +57,7 @@ def get_settings():
     if 'misp_url' in os.environ:
         settings['misp']['url'] = os.environ['misp_url']
     else:
-        settings['mongodb']['uri'] = file_settings['mongodb']['uri']
+        settings['misp']['url'] = file_settings['misp']['url']
 
     if 'misp_key' in os.environ:
         settings['misp']['key'] = os.environ['misp_key']

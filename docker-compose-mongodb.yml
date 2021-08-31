@@ -13,6 +13,13 @@ services:
       - mongodb-primary
       - mongodb-secondary
       - mongodb-arbiter
+    volumes:
+      - type: bind
+        source: ./logs
+        target: /app/src/logs
+      - type: bind
+        source: ./export
+        target: /app/src/export
 
   mongodb-primary:
     image: docker.io/bitnami/mongodb:4.4

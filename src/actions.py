@@ -25,7 +25,7 @@ from pymongo import MongoClient
 from utils import get_settings, extract_urls
 from analyzer import detect_action
 
-settings = get_settings()
+
 
 def get_lock(process_name):
     #https://stackoverflow.com/questions/788411/check-to-see-if-python-script-is-running
@@ -81,8 +81,12 @@ def get_misp_event(misp, event_name):
     else:
         return event[0]['Event']
 
+def publish_event(misp, event_name):
+    event = misp.search(eventinfo=event_name, pythonify=True)
+    misp.publish(event[0])
+
 def export_as_json_feed(misp, event_name, outputdir):
-    events = misp.search(eventinfo=event_name, published=True)
+    events = misp.search(eventinfo=event_name)
     if len(events) == 0:
         sys.exit("No events returned.")
 
@@ -178,7 +182,8 @@ def get_attributes(mongo_client, time_delta_in_minutes):
             attributes[source_ip] = {
                 'type':'ip-src',
                 'value':request['SourceIP'],
-                'comment': comment
+                'comment': comment,
+                'to_ids' = False
             }
 
         for url in list(set(urls)):
@@ -214,14 +219,11 @@ def main():
     parser.add_argument("-e", "--event-name",  help="MISP event name to use", default='Docker honeypot (DockerTrap)')
     parser.add_argument("-d", "--output-dir",  help="Output directory to export feed")
     parser.add_argument("-f", "--csv-file",  help="File path to export csv")
+    parser.add_argument("-p", "--publish", action='store_true', help="Publish event")
     
     args = parser.parse_args()
 
-    CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
-    SETTINGS_PATH = os.path.join(CURRENT_DIR, 'settings', 'settings.yml')
-
-    with open(SETTINGS_PATH) as f:
-        settings = yaml.safe_load(f)
+    settings = get_settings()
 
     misp_settings = settings['misp']
     misp = ExpandedPyMISP(misp_settings['url'], misp_settings['key'], misp_settings['verify'], cert=misp_settings['cert'])
@@ -230,6 +232,8 @@ def main():
     if args.action == 'export_misp':
         attributes = get_attributes(mongo_client=mongo_client, time_delta_in_minutes=int(args.last))
         export_misp(misp=misp, event_name=args.event_name, attributes=attributes)
+        if args.publish:
+            publish_event(misp=misp, event_name=args.event_name)
 
     elif args.action == 'export_csv':
         attributes = get_attributes(mongo_client=mongo_client, time_delta_in_minutes=int(args.last))

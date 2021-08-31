@@ -3,6 +3,8 @@
 **/*.json
 **/*.csv
 *.env
+export/
+logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
