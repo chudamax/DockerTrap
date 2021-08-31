@@ -29,7 +29,7 @@ def detect_action(request):
     elif path.endswith('/containers/json') or re.match(r'\/v[\d.]*\/containers\/.*\/json', path):
         action = 'docker_containers_enumeration'
 
-    elif path.endswith('/images/json') or re.match(r'\/v[\d.]*\/images\/.*\/json', path)::
+    elif path.endswith('/images/json') or re.match(r'\/v[\d.]*\/images\/.*\/json', path):
         action = 'docker_images_enumeration'
 
     elif path.endswith('/containers/create'):
@@ -53,7 +53,8 @@ def detect_action(request):
     elif path.endswith('/build'):
         action = 'docker_container_build'
 
-    elif path.endswith('/start') or path.endswith('/attach') or path.endswith('/resize') or path.endswith('/events') or path == ('/') or path == ('/favicon.ico'):
+    elif path.endswith('/start') or path.endswith('/attach') or path.endswith('/resize') or path.endswith('/events') or \
+    path == ('/') or path == ('/favicon.ico') or re.match(r'\/v[\d.]*\/exec\/.*\/json', path):
         action = 'other'
 
     elif method == 'DELETE' and 'containers' in path:
@@ -129,7 +130,16 @@ def handle_change(change, misp_event=None):
         print (Fore.YELLOW + 'Image: {} Tag: {}'.format(request['Args']['fromImage'], request['Args']['tag']))
 
     elif action == 'docker_container_exec':
+        cmd = ' '.join(data_json.get('Cmd'))
+        urls = extract_urls(cmd=cmd)
+
         print (Fore.MAGENTA + '{} {} Docker container execution request [{}]'.format(dt, request['SourceIP'], path))
+
+        if cmd:
+            print (Fore.YELLOW + 'Cmd: {}'.format(cmd))
+
+        if urls:
+            print (Fore.YELLOW + 'Extracted URLs: {}'.format(urls))
 
     elif action =='docker_container_delete':
         print (Fore.MAGENTA + '{} {} Docker container DELETE request [{}]'.format(dt, request['SourceIP'], path))

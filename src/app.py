@@ -241,7 +241,7 @@ def image_create(api_version=None):
 
     return Response(generate(), mimetype='application/json')
 
-#POST
+##It will not work in case of nginx\unicorn, because http connection should be upgraded to pure TCP
 #http://ip:2375/v1.24/containers/cb0ef905f1aa248e32261af63a39da3988287bcf6323e0e368bfa7fef212950a/attach?stderr=1&stdout=1&stream=1
 @app.route('/containers/<container_id>/attach', methods = ['POST'], endpoint='container_attach')
 @app.route('/v<api_version>/containers/<container_id>/attach', methods = ['POST'], endpoint='container_attach')
@@ -260,7 +260,7 @@ def container_attach(container_id, api_version=None):
     resp.headers['Content-Type'] = 'application/vnd.docker.raw-stream'
     resp.headers['Connection'] = 'Upgrade'
     resp.headers['Upgrade'] = 'tcp'
-    return resp, 200
+    return resp, 101
 
 @app.route('/v<api_version>/containers/<container_id>/resize', methods = ['POST'], endpoint='container_resize')
 @app.route('/containers/<container_id>/resize', methods = ['POST'], endpoint='container_resize')
@@ -333,6 +333,8 @@ def container_exec(container_id, api_version=None):
         answer = {"Id":new_exec['Id']}
         return jsonify(answer),201
 
+
+#It will not work in case of nginx\unicorn, because http connection should be upgraded to pure TCP
 @app.route('/v<api_version>/exec/<exec_id>/start', methods = ['POST'], endpoint='exec_start')
 @app.route('/exec/<exec_id>/start', methods = ['POST'], endpoint='exec_start')
 def exec_start(api_version, exec_id):
@@ -349,7 +351,7 @@ def exec_start(api_version, exec_id):
     else:
         resp = Response("")
 
-    return resp
+    return resp, 101
 
 @app.route('/v<api_version>/exec/<exec_id>/json', methods = ['GET'], endpoint='exec_view')
 @app.route('/exec/<exec_id>/json', methods = ['POST'], endpoint='exec_view')
