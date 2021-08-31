@@ -31,8 +31,11 @@ def get_settings():
         'Ostype': 'linux'
     }
 
-    with open(SETTINGS_PATH, 'r') as stream:
-        file_settings = yaml.safe_load(stream)
+    if os.path.isfile(SETTINGS_PATH):
+        with open(SETTINGS_PATH, 'r') as stream:
+            file_settings = yaml.safe_load(stream)
+    else:
+        file_settings = None
 
     if os.environ.get('sensor_id'):
         settings['sensor']['id'] = os.environ['sensor_id']
