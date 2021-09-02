@@ -260,7 +260,7 @@ def container_attach(container_id, api_version=None):
     resp.headers['Content-Type'] = 'application/vnd.docker.raw-stream'
     resp.headers['Connection'] = 'Upgrade'
     resp.headers['Upgrade'] = 'tcp'
-    return resp, 101
+    return resp, 200
 
 @app.route('/v<api_version>/containers/<container_id>/resize', methods = ['POST'], endpoint='container_resize')
 @app.route('/containers/<container_id>/resize', methods = ['POST'], endpoint='container_resize')
@@ -351,7 +351,7 @@ def exec_start(api_version, exec_id):
     else:
         resp = Response("")
 
-    return resp, 101
+    return resp, 200
 
 @app.route('/v<api_version>/exec/<exec_id>/json', methods = ['GET'], endpoint='exec_view')
 @app.route('/exec/<exec_id>/json', methods = ['POST'], endpoint='exec_view')
