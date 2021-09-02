@@ -38,7 +38,7 @@ def detect_action(request):
     elif method == 'HEAD' and 'archive' in path:
         action = 'docker_containers_check_file'
 
-    elif method == 'POST' and 'archive' in path:
+    elif method == 'PUT' and 'archive' in path:
         action = 'docker_containers_put_file'
 
     elif path.endswith('/containers/kill'):
