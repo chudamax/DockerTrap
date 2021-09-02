@@ -183,7 +183,7 @@ def get_attributes(mongo_client, time_delta_in_minutes):
                 'type':'ip-src',
                 'value':request['SourceIP'],
                 'comment': comment,
-                'to_ids' = False
+                'to_ids':False
             }
 
         for url in list(set(urls)):
