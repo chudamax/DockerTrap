@@ -82,12 +82,13 @@ def handle_change(change, misp_event=None):
         print (Fore.GREEN + '{} {} Docker containers enumeration [{}]'.format(dt, request['SourceIP'], path))
 
     elif action == 'docker_containers_check_file':
-        filepath = request.args.get("path")
+        filepath = request['Args'].get("path")
         print (Fore.GREEN + '{} {} Docker container check file: {} [{}]'.format(dt, request['SourceIP'], filepath, path))
 
     elif action == 'docker_containers_put_file':
-        dirpath = request.args.get("path")
-        print (Fore.GREEN + '{} {} Docker container put file to: {} [{}]'.format(dt, request['SourceIP'], dirpath, path))
+        dirpath = request['Args'].get("path")
+        print (Fore.MAGENTA + '{} {} Docker container put file to: {} [{}]'.format(dt, request['SourceIP'], dirpath, path))
+        file = request['Data']
 
     elif action == 'docker_images_enumeration':
         print (Fore.GREEN + '{} {} Docker images enumeration [{}]'.format(dt, request['SourceIP'], path))

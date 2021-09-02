@@ -2,6 +2,7 @@ version: '3.3'
 
 services:
   docker:
+    restart: always
     build: 
       context: .
       dockerfile: dockerfiles/docker
@@ -22,6 +23,7 @@ services:
         target: /app/src/export
 
   mongodb-primary:
+    restart: always
     image: docker.io/bitnami/mongodb:4.4
     environment:
       - MONGODB_ADVERTISED_HOSTNAME=mongodb-primary
@@ -35,6 +37,7 @@ services:
       - 27017
 
   mongodb-secondary:
+    restart: always
     image: docker.io/bitnami/mongodb:4.4
     depends_on:
       - mongodb-primary
@@ -49,6 +52,7 @@ services:
       - 27017
 
   mongodb-arbiter:
+    restart: always
     image: docker.io/bitnami/mongodb:4.4
     depends_on:
       - mongodb-primary

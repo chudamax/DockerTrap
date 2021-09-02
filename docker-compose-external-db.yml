@@ -2,6 +2,7 @@ version: '3.3'
 
 services:
   docker:
+    restart: always
     build: 
       context: .
       dockerfile: dockerfiles/docker
