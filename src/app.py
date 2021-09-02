@@ -191,6 +191,7 @@ def create_container(api_version=None):
             new_container['Name'] = get_random_name()
         new_container['Config']['Hostname'] = secrets.token_hex(6)
         new_container['Config']['Cmd'] = cmd
+        new_container['Config']['Image'] = container_request['Image']
         new_container['NetworkSettings']['Networks']['bridge']['NetworkID'] = secrets.token_hex(32)
         new_container['NetworkSettings']['Networks']['bridge']['EndpointID'] = secrets.token_hex(32)
 
