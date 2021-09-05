@@ -1,7 +1,5 @@
 # DockerTrap
 
-![example](img/example.gif)
-
 The basic schema:
 ![arhitecture](img/arch.png)
 
@@ -60,3 +58,6 @@ docker exec -it dockertrap_docker_1 python3 actions.py export_misp -l 60 -e Dock
 
 #to export a published MISP event as a MISP feed
 docker exec -it dockertrap_docker_1 python3 actions.py generate_misp_feed -e DockerTrap -d ./export/misp
+
+## Example
+![example](img/example.gif)
