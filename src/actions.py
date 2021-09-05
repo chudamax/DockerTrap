@@ -23,7 +23,7 @@ from pymisp import ExpandedPyMISP, MISPEvent, MISPTag
 
 from pymongo import MongoClient
 from utils import get_settings, extract_urls
-from analyzer import detect_action
+from analyzer import get_action_info
 
 
 
@@ -125,55 +125,23 @@ def get_attributes(mongo_client, time_delta_in_minutes):
     for request in request_logs:
 
         data_json = request['DataJson']
-
-        action = detect_action(request)
-        dt = datetime.now().strftime("[%d/%m/%Y %H:%M:%S]")
+        action_info = get_action_info(request)
         path = request['Path']
         source_ip = request['SourceIP']
         comment = None
         urls = []
 
-        if action == 'docker_service_enumeration':
-            comment = 'Docker service enumeration;'
-
-        elif action == 'docker_containers_enumeration':
-            comment = 'Docker containers enumeration;'
-
-        elif action == 'docker_images_enumeration':
-            comment = 'Docker images enumeration;'
-
-        elif action == 'docker_containers_create':
-            cmd = data_json.get('Cmd')
-            if cmd:
-                cmd = ' '.join(data_json.get('Cmd'))
-                urls += extract_urls(cmd=cmd)
-
-            entrypoint = data_json.get('Entrypoint')
-            if entrypoint:
-                entrypoint = ' '.join(entrypoint)
-                urls += extract_urls(cmd=entrypoint)
-
-            comment = 'Docker container creation attempt: Cmd:{} Entrypoint: {} Env: {};'.format(cmd, entrypoint, data_json.get('Env'))
-
-        elif action == 'docker_images_create':
-            image = 'Image: {} Tag: {}'.format(request['Args']['fromImage'], request['Args']['tag'])
-            comment = 'Docker image creation attempt. {};'.format(image)
-
-        elif action == 'docker_container_exec':
-            cmd = data_json.get('Cmd')
-            if cmd:
-                cmd = ' '.join(data_json.get('Cmd'))
-                urls += extract_urls(cmd=cmd)
-            comment = 'Docker command execution attempt. Cmd: {};'.format(cmd)
-
-        elif action =='docker_container_delete':
-            comment = 'Docker container delete attempt.;'
-
-        elif action == 'unhandled':
-            pass
-
-        if not comment or action == 'unhandled':
+        if action_info['action'] in ['Ignore','Unhandled']:
             continue
+
+        comment = action_info['action'] + ';'
+
+        for name,value in action_info.items():
+            if name in ['action','type','request']:
+                continue
+
+            if value:
+                comment += ' {}: {};'.format(name.capitalize(), value)
 
         if source_ip in attributes:
             if not comment in attributes[source_ip]['comment']:
@@ -186,7 +154,7 @@ def get_attributes(mongo_client, time_delta_in_minutes):
                 'to_ids':False
             }
 
-        for url in list(set(urls)):
+        for url in action_info['urls']:
             attributes[url] = {
                 'type':'url',
                 'value':url,
