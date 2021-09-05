@@ -1,7 +1,9 @@
 # DockerTrap
 
+![example](img/example.gif)
+
 The basic schema:
-![arhitecture](https://www.chudamax.com/posts/building_a_docker_service_honeypot/arch.png)
+![arhitecture](img/arch.png)
 
 There are 3 main scripts:
 - app.py - The main request handler. Responsible for requests logging and working with internal fake images or containers.
@@ -26,16 +28,16 @@ Currently, the following docker commands are supported:
 The source code can be found on Gitlab (https://github.com/i223t/DockerTrap). The tool can be used as a standalone Flask app or as a docker container using docker-compose instructions.
 
 There are 2 docker compose files:
-- ***docker-compose-mongodb.yml*** - It can be used just to quickly test the tool without any additional configurations or installations. It contains an internal mongodb instance.
-- ***docker-compose.yml*** - a configuration where mongodb in not installed and it is necessory to set a connection URI for an external mongodb instance . In this case environment variables in the default.env files should be changed accordingly. I suggest to use a free MongoDB Atlas acoount on https://www.mongodb.com/
+- ***docker-compose*** - It can be used just to quickly test the tool without any additional configurations or installations. It contains an internal mongodb instance.
+- ***docker-compose-external-db.yml*** - a configuration where mongodb in not installed and it is necessory to set a connection URI for an external mongodb instance . In this case environment variables in the default.env files should be changed accordingly. I suggest to use a free MongoDB Atlas acoount on https://www.mongodb.com/
 
 Both installations can be launched using the commands:
 ```sh
-docker-compose -f docker-compose-mongodb.yml up
+docker-compose up
 #or
-docker-compose -f docker-compose.yml up
+docker-compose -f docker-compose-external-db.yml up
 ```
-![arhitecture](https://www.chudamax.com/posts/building_a_docker_service_honeypot/docker-compose.png)
+![docker-compose](img/docker-compose.png)
 
 ## Tools
 Since all the tools are inside docker it's necessry to get the running docker container`s name:
