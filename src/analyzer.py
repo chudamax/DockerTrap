@@ -201,12 +201,12 @@ def main():
 
     print ('Waiting for events...')
     for change in client['DockerHoneypot']['http_request_log'].watch():
-        handle_change(change)
+        #handle_change(change)
 
-        # try:
-        #     handle_change(change)
-        # except Exception as err:
-        #     print (err)
+        try:
+            handle_change(change)
+        except Exception as err:
+            print (err)
 
 if __name__ == "__main__":
     main()
