@@ -5,7 +5,7 @@ The basic schema:
 
 There are 3 main scripts:
 - app.py - The main request handler. Responsible for requests logging and working with internal fake images or containers.
-- analyzer.py - Implements request analyzing logic based on data from the database, shows the information about attacks to the user.
+- analyzer.py - Implements request analyzing logic based on data from the database, shows information about attacks.
 - actions.py - Can be used to export Threat Intelligence data to\from MISP or local CSV files.
 
 ## Implemented commands
@@ -20,13 +20,13 @@ Currently, the following docker commands are supported:
 - container run
 - container exec
 - container cp
-- container kill
+- container rm
 
 ## Installation and running
 The source code can be found on Gitlab (https://github.com/i223t/DockerTrap). The tool can be used as a standalone Flask app or as a docker container using docker-compose instructions.
 
 There are 2 docker compose files:
-- ***docker-compose*** - A setup which contains an internal mongodb instance.
+- ***docker-compose*** - contains an internal mongodb instance.
 - ***docker-compose-external-db.yml*** - a configuration for an external mongodb instance
 
 Both installations can be launched using the commands:
@@ -38,7 +38,7 @@ docker-compose -f docker-compose-external-db.yml up
 ![docker-compose](img/docker-compose.png)
 
 ## Tools
-Since all the tools are inside docker it's necessry to get the running docker container`s name:
+Since all the tools are running inside docker it's necessary to get the running docker container`s name:
 ```sh
 docker ps
 ```
