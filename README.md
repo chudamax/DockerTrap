@@ -26,8 +26,8 @@ Currently, the following docker commands are supported:
 The source code can be found on Gitlab (https://github.com/i223t/DockerTrap). The tool can be used as a standalone Flask app or as a docker container using docker-compose instructions.
 
 There are 2 docker compose files:
-- ***docker-compose*** - It can be used just to quickly test the tool without any additional configurations or installations. It contains an internal mongodb instance.
-- ***docker-compose-external-db.yml*** - a configuration where mongodb in not installed and it is necessory to set a connection URI for an external mongodb instance . In this case environment variables in the default.env files should be changed accordingly. I suggest to use a free MongoDB Atlas acoount on https://www.mongodb.com/
+- ***docker-compose*** - A setup which contains an internal mongodb instance.
+- ***docker-compose-external-db.yml*** - a configuration for an external mongodb instance
 
 Both installations can be launched using the commands:
 ```sh
