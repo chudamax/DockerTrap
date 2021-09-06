@@ -186,7 +186,7 @@ def create_container(api_version=None):
         new_container['HostsPath'] =  "/var/lib/docker/containers/{}/hosts".format(container_id)
         new_container['LogPath'] =  "/var/lib/docker/containers/{0}/{0}-json.log".format(container_id)
         if request.args.get("name"):
-            new_container['Name'] = request.args.get("name")
+            new_container['Name'] = '/{}'.format(request.args.get("name"))
         else:
             new_container['Name'] = get_random_name()
         new_container['Config']['Hostname'] = secrets.token_hex(6)
