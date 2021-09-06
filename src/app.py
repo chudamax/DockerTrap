@@ -277,13 +277,19 @@ def exec_resize(container_id, api_version=None):
 @app.route('/containers/<container_id>', methods = ['DELETE'], endpoint='container_delete')
 def container_delete(container_id, api_version=None):
     containers = DockerContainer.objects(Id__startswith='{}'.format(container_id))
-    if len(containers) == 0:
-        answer = {'message':'No such container: {}'.format(container_id)}
-        return jsonify(answer), 404
-    
-    container = containers[0]
-    container.delete()
-    return '', 200
+    if len(containers) != 0:
+        container = containers[0]
+        container.delete()
+        return '', 200
+
+    containers = DockerContainer.objects(Name='/{}'.format(container_id))
+    if len(containers) != 0:
+        container = containers[0]
+        container.delete()
+        return '', 200
+
+    answer = {'message':'No such container: {}'.format(container_id)}
+    return jsonify(answer), 404
 
 #/v1.41/containers/061ee0bfdb4c/json
 @app.route('/v<api_version>/containers/<container_id>/json', endpoint='container_info')
